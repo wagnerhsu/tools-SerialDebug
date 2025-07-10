@@ -22,3 +22,6 @@
 /SerialDebug/obj/Debug/TempPE/Properties.Resources.Designer.cs.dll
 /SerialDebug/SerialDebug.csproj.user
 /SerialDebug.suo
+.vs/
+bin/
+obj/
