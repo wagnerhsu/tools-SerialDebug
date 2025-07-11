@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using XMX.FileTransmit;
 using System.Reflection;
 using XMX.LIB;
+using SunHealth.Gateway.Services.WxWindows;
 
 
 namespace SerialDebug
@@ -209,7 +210,7 @@ namespace SerialDebug
             cbStreamControl.SelectedIndex = 0;
             serialPort.RtsEnable = chkRTS.Checked;
 
-            Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            Version = FileVersionService.GetFileVersion().FileVersion;
             //this.Text = string.Format("{0} V{1}    ×÷Õß£ºÆôÑÒ  QQ£º516409354", Application.ProductName, Version);
             this.Text = string.Format("{0} V{1}", Application.ProductName, Version);
 
@@ -1399,7 +1400,7 @@ namespace SerialDebug
         {
             if (lab.InvokeRequired)
             {
-                lab.BeginInvoke(new MethodInvoker(delegate
+                lab.BeginInvoke(new System.Windows.Forms.MethodInvoker(delegate
                 {
                     SetLableText(lab, text);
                 }));
@@ -1422,7 +1423,7 @@ namespace SerialDebug
         {
             if (txtReceive.InvokeRequired)
             {
-                txtReceive.Invoke(new MethodInvoker(delegate
+                txtReceive.Invoke(new System.Windows.Forms.MethodInvoker(delegate
                 {
                     TextBoxReceiveAppend(color, appendText);
                 }));
@@ -1636,7 +1637,7 @@ namespace SerialDebug
         {
             if (txtSend.InvokeRequired)
             {
-                txtSend.BeginInvoke(new MethodInvoker(delegate
+                txtSend.BeginInvoke(new System.Windows.Forms.MethodInvoker(delegate
                 {
                     txtSendUpdate(text);
                 }));
@@ -1817,7 +1818,7 @@ namespace SerialDebug
         {
             if (this.InvokeRequired)
             {
-                this.BeginInvoke(new MethodInvoker(delegate()
+                this.BeginInvoke(new System.Windows.Forms.MethodInvoker(delegate()
                 {
                     SetSendEnable(IsEnable);
                 }));

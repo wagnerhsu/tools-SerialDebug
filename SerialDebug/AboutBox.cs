@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Reflection;
+using SunHealth.Gateway.Services.WxWindows;
 
 namespace SerialDebug
 {
@@ -18,7 +19,7 @@ namespace SerialDebug
             //  - 项目->属性->应用程序->程序集信息
             //  - AssemblyInfo.cs
             this.Text = String.Format("关于 {0}", AssemblyTitle);
-            this.LabelProductName.Text = AssemblyProduct + String.Format("  V{0}", AssemblyVersion);
+            this.LabelProductName.Text = AssemblyProduct + String.Format("  V{0}", FileVersionService.GetFileVersion().FileVersion);
             this.LabelVersion.Text = "作者：谢明鑫";// String.Format("版本 {0}", AssemblyVersion);
             this.LabelCopyright.Text = "  QQ：516409354";//AssemblyCopyright;
             //this.labelCompanyName.Text = AssemblyCompany;
