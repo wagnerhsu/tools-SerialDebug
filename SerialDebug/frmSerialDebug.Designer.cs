@@ -1,4 +1,6 @@
-﻿namespace SerialDebug
+﻿using Common;
+
+namespace SerialDebug
 {
     partial class frmMain
     {
@@ -40,7 +42,7 @@
             this.cbDataBit = new System.Windows.Forms.ComboBox();
             this.cbParity = new System.Windows.Forms.ComboBox();
             this.cbBaudRate = new System.Windows.Forms.ComboBox();
-            this.cbComName = new System.Windows.Forms.ComboBox();
+            this.cbComName = new ReadOnlyComboBox();
             this.label13 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -301,6 +303,7 @@
             this.cbComName.DropDown += new System.EventHandler(this.cbComName_DropDown);
             this.cbComName.SelectedIndexChanged += new System.EventHandler(this.cbComName_SelectedIndexChanged);
             this.cbComName.DropDownClosed += new System.EventHandler(this.cbComName_DropDownClosed);
+            this.cbComName.MouseHover += cbComName_MouseHover;
             // 
             // label13
             // 
@@ -1221,6 +1224,11 @@
 
         }
 
+        private void CbComName_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            throw new System.NotImplementedException();
+        }
+
         #endregion
 
         private System.Windows.Forms.GroupBox groupBox1;
@@ -1229,7 +1237,7 @@
         private System.Windows.Forms.ComboBox cbDataBit;
         private System.Windows.Forms.ComboBox cbParity;
         private System.Windows.Forms.ComboBox cbBaudRate;
-        private System.Windows.Forms.ComboBox cbComName;
+        private Common.ReadOnlyComboBox cbComName;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;

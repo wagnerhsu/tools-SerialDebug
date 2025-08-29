@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace SerialDebug
 {
-    class SystemHardware
+    internal class SystemHardware
     {
         //获取CPU序列号
         public static string GetCPUSerialNumber()
@@ -28,7 +28,6 @@ namespace SerialDebug
                 return "";
             }
         }
-
 
         //获取主板序列号
         public static string GetBIOSSerialNumber()
@@ -70,10 +69,8 @@ namespace SerialDebug
             }
         }
 
-
-
         /// <summary>
-        /// Get system serail port
+        /// Get system serial port
         /// </summary>
         /// <returns></returns>
         public static string[] GetSerialPort()
@@ -85,45 +82,12 @@ namespace SerialDebug
             {
                 if (reg.IsMatch(s))
                 {
+                    if (s.Contains("Controlling Device")) continue;
                     spList.Add(s);
                 }
             }
 
             return spList.ToArray();
-
-
-            //List<string> strs = new List<string>();
-            //try
-            //{
-            //    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("select * from " + HardwareEnum.Win32_PnPEntity))
-            //    {
-            //        var hardInfos = searcher.Get();
-            //        foreach (var hardInfo in hardInfos)
-            //        {
-
-            //            string str = hardInfo.Properties["Name"].Value.ToString();
-            //            //Regex reg = new Regex(@"COM\d+");
-
-            //            //if (reg.IsMatch(str))
-            //            //{
-            //                strs.Add(str);
-            //            //}
-
-            //        }
-            //        searcher.Dispose();
-            //    }
-
-            //}
-            //catch (Exception ex)
-            //{
-            //    Console.WriteLine(ex.ToString());
-            //}
-            //return strs.ToArray();
-
-
-
-
-
         }
 
         /// <summary>
@@ -134,7 +98,6 @@ namespace SerialDebug
         /// <returns></returns>
         public static string[] GetHarewareInfo(HardwareEnum hardType, string propKey)
         {
-
             List<string> strs = new List<string>();
             try
             {
@@ -148,7 +111,6 @@ namespace SerialDebug
                             String str = hardInfo.Properties[propKey].Value.ToString();
                             strs.Add(str);
                         }
-
                     }
                 }
                 return strs.ToArray();
@@ -170,6 +132,7 @@ namespace SerialDebug
         {
             // 硬件
             Win32_Processor, // CPU 处理器
+
             Win32_PhysicalMemory, // 物理内存条
             Win32_Keyboard, // 键盘
             Win32_PointingDevice, // 点输入设备，包括鼠标。
@@ -200,6 +163,7 @@ namespace SerialDebug
 
             // 操作系统
             Win32_TimeZone, // 时区
+
             Win32_SystemDriver, // 驱动程序
             Win32_DiskPartition, // 磁盘分区
             Win32_LogicalDisk, // 逻辑磁盘
@@ -222,11 +186,5 @@ namespace SerialDebug
             Win32_NetworkProtocol, // 已安装的网络协议
             Win32_PnPEntity,//all device
         }
-
-
-
-
-
-
     }
 }
