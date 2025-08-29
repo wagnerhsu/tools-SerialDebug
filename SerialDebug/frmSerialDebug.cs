@@ -14,6 +14,7 @@ using XMX.FileTransmit;
 using System.Reflection;
 using XMX.LIB;
 using SunHealth.Gateway.Services.WxWindows;
+using MethodInvoker = System.Windows.Forms.MethodInvoker;
 
 namespace SerialDebug
 {
@@ -52,7 +53,7 @@ namespace SerialDebug
         private List<string> SendTempList = new List<string>();
         private int SendTempIndex = 0;
 
-        private delegate void TextBoxAppendDel(string str);             // �ı�������ַ�
+        private delegate void TextBoxAppendDel(string str); // 文本框添加字符
 
         private TextBoxAppendDel txtReceiveAppend;
 
@@ -62,7 +63,7 @@ namespace SerialDebug
 
         private double splitPercent = 0.0f;
 
-        private bool HyperTerminalMode = false;      // �����ն�ģʽ
+        bool HyperTerminalMode = false; // 超级终端模式
 
         private void LoadConfig()
         {
@@ -149,7 +150,7 @@ namespace SerialDebug
 
             SetMode(false);
 
-            ////���벨����
+            ////加入波特率
             //cbBaudRate.Items.Add(110);
             //cbBaudRate.Items.Add(300);
             //cbBaudRate.Items.Add(600);
@@ -169,7 +170,7 @@ namespace SerialDebug
             ////cbBaudRate.SelectedItem = 9600;
             //cbBaudRate.Text = Convert.ToString(9600);
 
-            //��ż����λ
+            //奇偶较验位
             cbParity.Items.Add(System.IO.Ports.Parity.Even);
             cbParity.Items.Add(System.IO.Ports.Parity.Mark);
             cbParity.Items.Add(System.IO.Ports.Parity.None);
@@ -177,14 +178,14 @@ namespace SerialDebug
             cbParity.Items.Add(System.IO.Ports.Parity.Space);
             cbParity.SelectedItem = System.IO.Ports.Parity.None;
 
-            //����λ
+            //数据位
             cbDataBit.Items.Add(5);
             cbDataBit.Items.Add(6);
             cbDataBit.Items.Add(7);
             cbDataBit.Items.Add(8);
             cbDataBit.SelectedItem = 8;
 
-            //ֹͣλ
+            //停止位
             //cbStopBit.Items.Add(System.IO.Ports.StopBits.None);
             cbStopBit.Items.Add(System.IO.Ports.StopBits.One);
             cbStopBit.Items.Add(System.IO.Ports.StopBits.OnePointFive);
@@ -203,7 +204,7 @@ namespace SerialDebug
             serialPort.RtsEnable = chkRTS.Checked;
 
             Version = FileVersionService.GetFileVersion().FileVersion;
-            //this.Text = string.Format("{0} V{1}    ���ߣ�����  QQ��516409354", Application.ProductName, Version);
+            //this.Text = string.Format("{0} V{1}    作者：启岩  QQ：516409354", Application.ProductName, Version);
             this.Text = string.Format("{0} V{1}", Application.ProductName, Version);
 
             CheckForIllegalCrossThreadCalls = false;
@@ -217,7 +218,8 @@ namespace SerialDebug
             panelNormalSend.Visible = false;
 
             frmNormalSend = new FormNormalSend();
-            frmNormalSend.OnSendByCtrlEnter += new FormNormalSend.SendByCtrlEnterHandler(frmNormalSend_OnSendByCtrlEnter);
+            frmNormalSend.OnSendByCtrlEnter +=
+                new FormNormalSend.SendByCtrlEnterHandler(frmNormalSend_OnSendByCtrlEnter);
             frmNormalSend.Dock = DockStyle.Fill;
             frmNormalSend.FormBorderStyle = FormBorderStyle.None;
             frmNormalSend.TopLevel = false;
@@ -257,6 +259,7 @@ namespace SerialDebug
             {
                 sendModeIndex = 0;
             }
+
             rbtnSendMod = new RadioButton[3] { radSendModeNormal, radSendModeQueue, radSendModeFile };
             rbtnSendMod[sendModeIndex].Checked = true;
 
@@ -272,6 +275,7 @@ namespace SerialDebug
             {
                 encodingName = System.Text.Encoding.Default.BodyName;
             }
+
             SelectEncoding(encodingName);
         }
 
@@ -337,10 +341,11 @@ namespace SerialDebug
             }
         }
 
-        #region ����������
+
+        #region 串口区操作
 
         /// <summary>
-        /// �򿪹رմ��ڲ�����
+        /// 打开关闭串口操作。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -349,7 +354,7 @@ namespace SerialDebug
             ////throw new Exception("<xxxxxxxx&\"yyy\"\r\nzzz>");
             try
             {
-                if (btnPortOpt.Text == "�򿪴���")
+                if (btnPortOpt.Text == "打开串口")
                 {
                     IsStart = true;
                     dataDispQueue.Clear();
@@ -366,7 +371,7 @@ namespace SerialDebug
                     }
                     else
                     {
-                        throw new Exception("�޷�ʶ��Ĵ��ڡ�");
+                        throw new Exception("无法识别的串口。");
                     }
 
                     serialPort.BaudRate = Convert.ToInt32(cbBaudRate.Text);
@@ -374,7 +379,7 @@ namespace SerialDebug
                     serialPort.DataBits = (int)cbDataBit.SelectedItem;
                     serialPort.StopBits = (System.IO.Ports.StopBits)cbStopBit.SelectedItem;
 
-                    serialPort.ReadBufferSize = 2 * 1024 * 1024;           // 2M
+                    serialPort.ReadBufferSize = 2 * 1024 * 1024; // 2M
                     //serialPort.Open();
                     sp.ReceiveTimeOut = Convert.ToInt32(numReceiveTimeOut.Value);
                     sp.Start();
@@ -418,15 +423,15 @@ namespace SerialDebug
                 if (serialPort.IsOpen)
                 {
                     picPortState.Image = ImageList.Images["open"];
-                    btnPortOpt.Text = "�رմ���";
+                    btnPortOpt.Text = "关闭串口";
                     cbComName.Enabled = false;
-                    
+
                     UpdatalabText();
                 }
                 else
                 {
                     picPortState.Image = ImageList.Images["close"];
-                    btnPortOpt.Text = "�򿪴���";
+                    btnPortOpt.Text = "打开串口";
                     cbComName.Enabled = true;
                     UpdatalabText();
                     SetSendEnable(false);
@@ -435,7 +440,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ѡ��ͨ�ſڡ�
+        /// 选择通信口。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -465,7 +470,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// �����ʡ�
+        /// 波特率。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -485,7 +490,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// У��λ
+        /// 校验位
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -505,7 +510,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ����λ��
+        /// 数据位。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -525,7 +530,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ֹͣλ��
+        /// 停止位。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -545,7 +550,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ������
+        /// 流控制
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -583,7 +588,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ���ں�������
+        /// 串口号下拉框
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -605,6 +610,7 @@ namespace SerialDebug
                 //iMax = s.Length > iMax?s.Length:iMax;
                 iMax = Math.Max(iMax, TextRenderer.MeasureText(s, cbComName.Font).Width);
             }
+
             cbComName.DropDownWidth = iMax;
             cbComName.DataSource = portList;
         }
@@ -635,7 +641,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ����RTS
+        /// 设置RTS
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -643,10 +649,12 @@ namespace SerialDebug
         {
             try
             {
-                if (serialPort.Handshake == Handshake.RequestToSend || serialPort.Handshake == Handshake.RequestToSendXOnXOff)
+                if (serialPort.Handshake == Handshake.RequestToSend ||
+                    serialPort.Handshake == Handshake.RequestToSendXOnXOff)
                 {
                     chkRTS.Checked = !chkRTS.Checked;
-                    MessageBox.Show("��������ѡ��Ӳ������Ӳ���������ʱ�޷���ȡ������DTS", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("当流控制选择“硬件”或“硬件和软件”时无法读取或设置DTS", Application.ProductName, MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                 }
                 else
                 {
@@ -660,7 +668,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ����DTR
+        /// 设置DTR
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -677,32 +685,33 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ˢ��״̬����
+        /// 刷新状态栏。
         /// </summary>
         private void UpdatalabText()
         {
             if (serialPort.IsOpen)
             {
-                string str = string.Format("ͨ������({0},{1},{2},{3},{4})",
-                      serialPort.PortName, serialPort.BaudRate, serialPort.Parity, (int)serialPort.DataBits,
-                      (float)serialPort.StopBits);
+                string str = string.Format("通信正常({0},{1},{2},{3},{4})",
+                    serialPort.PortName, serialPort.BaudRate, serialPort.Parity, (int)serialPort.DataBits,
+                    (float)serialPort.StopBits);
 
                 labIsSerialOpen.Text = str;
             }
             else
             {
-                labIsSerialOpen.Text = "ͨ�ſ��ѹر�";
+                labIsSerialOpen.Text = "通信口已关闭";
             }
         }
 
-        #endregion ����������
+        #endregion
 
-        #region �Ҽ��˵�����
+
+        #region 右键菜单功能
 
         private RichTextBox txtBoxMenu = new RichTextBox();
 
         /// <summary>
-        /// ������
+        /// 撤销。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -712,7 +721,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ���С�
+        /// 剪切。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -722,7 +731,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ���ơ�
+        /// 复制。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -732,7 +741,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ճ����
+        /// 粘贴。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -742,7 +751,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ɾ����
+        /// 删除。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -752,7 +761,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ȫѡ��
+        /// 全选。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -786,7 +795,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ʮ������ת�ַ�����
+        /// 十六进制转字符串。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -810,7 +819,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ������תʮ������
+        /// 二进制转十六进制
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -834,7 +843,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ʮ������ת������
+        /// 十六进制转二进制
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -859,7 +868,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ʮ������תʮ���ơ�
+        /// 十六进制转十进制。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -884,7 +893,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ʮ����תʮ�����ơ�
+        /// 十进制转十六进制。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -909,7 +918,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// �ַ���תʮ���ơ�
+        /// 字符串转十进制。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -934,7 +943,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ʮ����ת�ַ�����
+        /// 十进制转字符串。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -948,6 +957,7 @@ namespace SerialDebug
                 {
                     l.Add(Convert.ToByte(v & 0xFF));
                 }
+
                 string str = StreamConverter.ArrayToAsciiString(Global.Encode, l.ToArray());
 
                 Clipboard.SetText(str);
@@ -964,7 +974,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// �����Ҽ��˵���
+        /// 弹出右键菜单。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1008,7 +1018,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// �������������
+        /// 鼠标进入接收区。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1018,7 +1028,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// �����뷢������
+        /// 鼠标进入发送区。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1048,12 +1058,13 @@ namespace SerialDebug
             txtBoxMenu.ContextMenuStrip = null;
         }
 
-        #endregion �Ҽ��˵�����
+        #endregion
 
-        #region ���ܺ���
+
+        #region 功能函数
 
         /// <summary>
-        /// ʮ�������ַ���תʮ���ơ�
+        /// 十六进制字符串转十进制。
         /// </summary>
         /// <param name="hexStr"></param>
         /// <returns></returns>
@@ -1063,7 +1074,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ʮ�����ַ���תʮ���ơ�
+        /// 十进制字符串转十进制。
         /// </summary>
         /// <param name="decStr"></param>
         /// <returns></returns>
@@ -1072,12 +1083,13 @@ namespace SerialDebug
             return Convert.ToByte(decStr, 10);
         }
 
-        #endregion ���ܺ���
+        #endregion
 
-        #region ״̬������
+
+        #region 状态栏操作
 
         /// <summary>
-        /// ���ý���������
+        /// 设置接收区字体
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1115,7 +1127,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// �ö�����
+        /// 置顶设置
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1124,7 +1136,7 @@ namespace SerialDebug
             this.TopMost = !this.TopMost;
             if (this.TopMost == true)
             {
-                this.Text = Application.ProductName + " V" + Version + "  [�ö�]";
+                this.Text = Application.ProductName + " V" + Version + "  [置顶]";
                 picTop.Image = imglistTop.Images["nailon"];
             }
             else
@@ -1136,17 +1148,19 @@ namespace SerialDebug
             string textToolTip;
             if (this.TopMost)
             {
-                textToolTip = "ȡ���ö�";
+                textToolTip = "取消置顶";
             }
             else
             {
-                textToolTip = "�ö�";
+                textToolTip = "置顶";
             }
+
             ToolTip.SetToolTip(picTop, textToolTip);
         }
 
+
         /// <summary>
-        /// ��ս�����
+        /// 清空接收区
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1156,7 +1170,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ��շ�����
+        /// 清空发送区
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1166,7 +1180,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ��ռ���
+        /// 清空计数
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1179,7 +1193,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ��ս��ռ���
+        /// 清空接收计数
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1190,7 +1204,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ��շ��ͼ���
+        /// 清空发送计数
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1200,8 +1214,9 @@ namespace SerialDebug
             TxCounter = 0;
         }
 
+
         /// <summary>
-        /// ����
+        /// 帮助
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1216,7 +1231,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// �ر�
+        /// 关闭
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1225,12 +1240,13 @@ namespace SerialDebug
             this.Close();
         }
 
-        #endregion ״̬������
+        #endregion
 
-        #region ���ڽ�����ʾ
+
+        #region 串口接收显示
 
         ///// <summary>
-        ///// ���ڽ����жϡ�
+        ///// 串口接收中断。
         ///// </summary>
         ///// <param name="sender"></param>
         ///// <param name="e"></param>
@@ -1276,12 +1292,12 @@ namespace SerialDebug
         //    }
         //    catch (Exception ex)
         //    {
-        //        Console.WriteLine("���ڽ���" + ex.Message);
+        //        Console.WriteLine("串口接收" + ex.Message);
         //    }
         //}
 
         ///// <summary>
-        ///// ���մ����̡߳�
+        ///// 接收处理线程。
         ///// </summary>
         //private void ReceiveThreadHandle()
         //{
@@ -1302,14 +1318,14 @@ namespace SerialDebug
         //            {
         //                StringBuilder sbMsg = new StringBuilder();
 
-        //                if (chkDisplay.Checked)  // �Ƿ���ʾ
+        //                if (chkDisplay.Checked)  // 是否显示
         //                {
         //                    if (chkTimeStamp.Checked)
         //                    {
         //                        sbMsg.AppendFormat("<<<{0}", data.TimeString);
         //                    }
 
-        //                    if (chkReceiveHex.Checked) // ʮ��������ʾ
+        //                    if (chkReceiveHex.Checked) // 十六进制显示
         //                    {
         //                        sbMsg.AppendFormat("{0}", data.HexString);
 
@@ -1319,7 +1335,7 @@ namespace SerialDebug
         //                        sbMsg.AppendFormat("{0}", data.ASCIIString);
         //                    }
 
-        //                    if (chkWrap.Checked || chkTimeStamp.Checked)                    // �Զ�����
+        //                    if (chkWrap.Checked || chkTimeStamp.Checked)                    // 自动换行
         //                    {
         //                        sbMsg.Append(Environment.NewLine);
         //                    }
@@ -1336,13 +1352,13 @@ namespace SerialDebug
         //        }
         //        catch (Exception ex)
         //        {
-        //            Console.WriteLine("���ݴ����̣߳�" + ex.Message);
+        //            Console.WriteLine("数据处理线程：" + ex.Message);
         //        }
         //    }
         //}
 
         /// <summary>
-        /// ���½��ճ��ȡ�
+        /// 更新接收长度。
         /// </summary>
         /// <param name="count"></param>
         private void UpdateRx(UInt64 count)
@@ -1355,10 +1371,7 @@ namespace SerialDebug
         {
             if (lab.InvokeRequired)
             {
-                lab.BeginInvoke(new System.Windows.Forms.MethodInvoker(delegate
-                {
-                    SetLableText(lab, text);
-                }));
+                lab.BeginInvoke(new System.Windows.Forms.MethodInvoker(delegate { SetLableText(lab, text); }));
             }
             else
             {
@@ -1372,7 +1385,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ���½����ı���
+        /// 更新接收文本框。
         /// </summary>
         /// <param name="appendText"></param>
         private void TextBoxReceiveAppend(Color color, string appendText)
@@ -1408,7 +1421,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ���ý��ճ�ʱʱ��
+        /// 设置接收超时时间
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1422,7 +1435,7 @@ namespace SerialDebug
 
         private void DisplayContent(SerialStreamType type, string text)
         {
-            //�ϴ�Ϊ��������
+            //上次为发送数据
             if (text != "")
             {
                 switch (type)
@@ -1460,6 +1473,7 @@ namespace SerialDebug
                         content = dataDispQueue.Dequeue();
                     }
                 }
+
                 if (content != null)
                 {
                     switch (content.Type)
@@ -1495,6 +1509,7 @@ namespace SerialDebug
                         default:
                             break;
                     }
+
                     lastUpdateType = content.Type;
                 }
                 else
@@ -1510,6 +1525,7 @@ namespace SerialDebug
                         DisplayContent(lastUpdateType, txStrBuff.ToString());
                         txStrBuff.Remove(0, txStrBuff.Length);
                     }
+
                     Thread.Sleep(10);
                 }
 
@@ -1565,12 +1581,13 @@ namespace SerialDebug
             }
         }
 
-        #endregion ���ڽ�����ʾ
+        #endregion
 
-        #region ���ڷ���
+
+        #region 串口发送
 
         /// <summary>
-        /// ����״̬�����ա�
+        /// 更新状态栏接收。
         /// </summary>
         /// <param name="count"></param>
         private void UpdateTx(UInt64 count)
@@ -1580,17 +1597,14 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ���·������ı�
+        /// 更新发送区文本
         /// </summary>
         /// <param name="text"></param>
         private void txtSendUpdate(string text)
         {
             if (txtSend.InvokeRequired)
             {
-                txtSend.BeginInvoke(new System.Windows.Forms.MethodInvoker(delegate
-                {
-                    txtSendUpdate(text);
-                }));
+                txtSend.BeginInvoke(new System.Windows.Forms.MethodInvoker(delegate { txtSendUpdate(text); }));
             }
             else
             {
@@ -1599,7 +1613,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ���°������������
+        /// 按下按键的特殊操作
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1630,6 +1644,7 @@ namespace SerialDebug
                     SendTempIndex = 0;
                     Console.Beep();
                 }
+
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.Down)
@@ -1640,6 +1655,7 @@ namespace SerialDebug
                     SendTempIndex = SendTempList.Count;
                     Console.Beep();
                 }
+
                 e.Handled = true;
             }
             else
@@ -1669,15 +1685,16 @@ namespace SerialDebug
         {
             if (IsCtrlPressed)
             {
-                if (e.KeyChar == '\r' || e.KeyChar == '\n') // �س�
+                if (e.KeyChar == '\r' || e.KeyChar == '\n') // 回车
                 {
                     e.Handled = true;
                 }
             }
         }
 
+
         /// <summary>
-        /// �����ʼ���ͻ���ֹͣ���͡�
+        /// 点击开始发送或者停止发送。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1685,11 +1702,11 @@ namespace SerialDebug
         {
             try
             {
-                if (btnSend.Text == "��ʼ����")
+                if (btnSend.Text == "开始发送")
                 {
                     if (serialPort.IsOpen == false)
                     {
-                        MessageBox.Show("����δ�򿪣����ȴ򿪴���", "��������", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        MessageBox.Show("串口未打开，请先打开串口", "发送数据", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         return;
                     }
 
@@ -1716,7 +1733,7 @@ namespace SerialDebug
                         List<CSendParam> list = CurrentSendForm.GetSendList();
                         if (list.Count <= 0)
                         {
-                            MessageBox.Show("û���κοɷ��͵�����", "��������", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                            MessageBox.Show("没有任何可发送的数据", "发送数据", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                             return;
                         }
                         else
@@ -1755,27 +1772,25 @@ namespace SerialDebug
             }
         }
 
+
         /// <summary>
-        /// ���÷���ʹ�ܡ�
+        /// 设置发送使能。
         /// </summary>
-        /// <param name="IsEnable">��ΪTrueʱ��ʾ��ʼ���ͣ�False��ʾֹͣ���͡�</param>
+        /// <param name="IsEnable">当为True时表示开始发送，False表示停止发送。</param>
         private void SetSendEnable(bool IsEnable)
         {
             if (this.InvokeRequired)
             {
-                this.BeginInvoke(new System.Windows.Forms.MethodInvoker(delegate ()
-                {
-                    SetSendEnable(IsEnable);
-                }));
+                this.BeginInvoke(new MethodInvoker(delegate() { SetSendEnable(IsEnable); }));
                 //return;
             }
             else
             {
                 if (IsEnable == true)
                 {
-                    if (btnSend.Text != "ֹͣ����")
+                    if (btnSend.Text != "停止发送")
                     {
-                        btnSend.Text = "ֹͣ����";
+                        btnSend.Text = "停止发送";
 
                         radSendModeNormal.Enabled = false;
                         radSendModeQueue.Enabled = false;
@@ -1788,9 +1803,9 @@ namespace SerialDebug
                 }
                 else
                 {
-                    if (btnSend.Text != "��ʼ����")
+                    if (btnSend.Text != "开始发送")
                     {
-                        btnSend.Text = "��ʼ����";
+                        btnSend.Text = "开始发送";
 
                         radSendModeNormal.Enabled = true;
                         radSendModeQueue.Enabled = true;
@@ -1804,12 +1819,13 @@ namespace SerialDebug
             }
         }
 
-        #endregion ���ڷ���
+        #endregion
 
-        #region �����ļ��ʹ��ļ�
+
+        #region 保存文件和打开文件
 
         /// <summary>
-        /// ��������˵�
+        /// 弹出保存菜单
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1823,11 +1839,12 @@ namespace SerialDebug
             {
                 cmenuSave.Enabled = true;
             }
+
             this.cmenuSave.Show(lnkSaveData, 0, lnkSaveData.Height);
         }
 
         /// <summary>
-        /// ��������˵���
+        /// 弹出保存菜单。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1844,29 +1861,31 @@ namespace SerialDebug
             //this.cmenuSave.Show(lnkSaveData, 0, lnkSaveData.Height);
         }
 
+
         /// <summary>
-        /// ��ԭʼ��ʾ���档
+        /// 按原始显示保存。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void menuSaveStringToText_Click(object sender, EventArgs e)
         {
-            sFileDlg.Filter = "�ı��ļ�(*.txt)|*.txt";
+            sFileDlg.Filter = "文本文件(*.txt)|*.txt";
             if (sFileDlg.ShowDialog() == DialogResult.OK)
             {
                 File.WriteAllText(sFileDlg.FileName, txtReceive.Text);
-                MessageBox.Show("�ļ��ѱ��浽\n" + sFileDlg.FileName, sFileDlg.Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("文件已保存到\n" + sFileDlg.FileName, sFileDlg.Title, MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
         }
 
         /// <summary>
-        /// ��������תΪ��������ʾ��
+        /// 将接收区转为二进制显示。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void menuSaveStringToBinary_Click(object sender, EventArgs e)
         {
-            sFileDlg.Filter = "�������ļ�(*.bin)|*.bin";
+            sFileDlg.Filter = "二进制文件(*.bin)|*.bin";
             if (sFileDlg.ShowDialog() == DialogResult.OK)
             {
                 FileStream fs = new FileStream(sFileDlg.FileName, FileMode.OpenOrCreate);
@@ -1875,7 +1894,8 @@ namespace SerialDebug
                 {
                     byte[] bytes = System.Text.ASCIIEncoding.Default.GetBytes(txtReceive.Text);
                     bw.Write(bytes);
-                    MessageBox.Show("�ļ��ѱ��浽\n" + sFileDlg.FileName, sFileDlg.Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("文件已保存到\n" + sFileDlg.FileName, sFileDlg.Title, MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
@@ -1889,14 +1909,15 @@ namespace SerialDebug
             }
         }
 
+
         /// <summary>
-        /// ��ʮ�����Ƶ��������ļ���
+        /// 从十六进制到二进制文件。
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void menuSaveHexToBinary_Click(object sender, EventArgs e)
         {
-            sFileDlg.Filter = "�������ļ�(*.bin)|*.bin";
+            sFileDlg.Filter = "二进制文件(*.bin)|*.bin";
             if (sFileDlg.ShowDialog() == DialogResult.OK)
             {
                 FileStream fs = new FileStream(sFileDlg.FileName, FileMode.OpenOrCreate);
@@ -1904,10 +1925,13 @@ namespace SerialDebug
                 try
                 {
                     //string[] strArray = txtReceive.Text.TrimEnd().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    string[] strArray = txtReceive.Text.TrimEnd().Replace(Environment.NewLine, "").Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    byte[] bytes = Array.ConvertAll<string, byte>(strArray, new Converter<string, byte>(HexStringToByte));
+                    string[] strArray = txtReceive.Text.TrimEnd().Replace(Environment.NewLine, "")
+                        .Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    byte[] bytes =
+                        Array.ConvertAll<string, byte>(strArray, new Converter<string, byte>(HexStringToByte));
                     bw.Write(bytes);
-                    MessageBox.Show("�ļ��ѱ��浽\n" + sFileDlg.FileName, sFileDlg.Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("文件已保存到\n" + sFileDlg.FileName, sFileDlg.Title, MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
@@ -1921,9 +1945,10 @@ namespace SerialDebug
             }
         }
 
+
         private void lnkOpen_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            oFileDlg.Filter = "�ı��ļ�(*.txt)|*.txt|�������ļ�(*.bin)|*.bin|�����ļ�(*.*)|*.*";
+            oFileDlg.Filter = "文本文件(*.txt)|*.txt|二进制文件(*.bin)|*.bin|所有文件(*.*)|*.*";
             if (oFileDlg.ShowDialog() == DialogResult.OK)
             {
                 string strExt = System.IO.Path.GetExtension(oFileDlg.FileName).ToUpper();
@@ -1953,12 +1978,13 @@ namespace SerialDebug
             }
         }
 
-        #endregion �����ļ��ʹ��ļ�
+        #endregion
 
-        #region �����ն�ģʽ
+
+        #region 超级终端模式
 
         /// <summary>
-        /// �����ն���ʾ�ı�
+        /// 超级终端显示文本
         /// </summary>
         /// <param name="appendText"></param>
         private void HyperTerminalShowText(string appendText)
@@ -1966,9 +1992,7 @@ namespace SerialDebug
             HyperTerminal_HandleMessage(appendText);
             return;
 #if OLD_SHOW_HYPER
-
-            #region �����ն�ģʽ��ʾ
-
+            #region 超级终端模式显示
             string[] textBoxArray = txtReceive.Lines;
             int indexLines = txtReceive.Lines.Length;
             if (indexLines > 0)
@@ -2053,14 +2077,12 @@ namespace SerialDebug
                 }
                 index++;
             }
-
-            #endregion �����ն�ģʽ��ʾ
-
+            #endregion
 #endif
         }
 
         /// <summary>
-        /// V3.1����
+        /// V3.1处理
         /// </summary>
         /// <param name="message"></param>
         private void HyperTerminal_HandleMessage(string message)
@@ -2096,6 +2118,7 @@ namespace SerialDebug
                             txtReceive.SelectedText = "";
                         }
                     }
+
                     rowIndex += searchCharIndex + 1;
                 } while (searchCharIndex >= 0);
 
@@ -2130,6 +2153,7 @@ namespace SerialDebug
                         txtReceive.SelectedText = inStr.Substring(rowIndex, searchCharIndex - rowIndex);
                         txtReceive.SelectionStart = txtReceive.GetFirstCharIndexOfCurrentLine();
                     }
+
                     rowIndex += searchCharIndex + 1;
                 } while (searchCharIndex >= 0);
 
@@ -2147,7 +2171,7 @@ namespace SerialDebug
         private string htSendString = string.Empty;
 
         /// <summary>
-        /// ��������
+        /// 按键按下
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -2161,14 +2185,15 @@ namespace SerialDebug
 
             if (chkSendByEnter.Checked)
             {
-                if (e.KeyChar == 8)     // �˸�
+                if (e.KeyChar == 8) // 退格
                 {
                     if (htSendString.Length > 0)
                     {
                         htSendString = htSendString.Remove(htSendString.Length - 1, 1);
                     }
                 }
-                if (e.KeyChar == 13)    // �س�
+
+                if (e.KeyChar == 13) // 回车
                 {
                     serialPort.Write(string.Format("{0}{1}", htSendString, HtEofChars));
                     htSendString = string.Empty;
@@ -2182,6 +2207,7 @@ namespace SerialDebug
             {
                 serialPort.Write(new byte[] { (byte)e.KeyChar }, 0, 1);
             }
+
             if (chkHTCharEcho.Checked)
             {
                 //e.Handled = true;
@@ -2190,7 +2216,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ��ͨģʽ�������ն�ģʽ
+        /// 普通模式到超级终端模式
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -2200,7 +2226,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// �����ն�ģʽ����ͨģʽ
+        /// 超级终端模式到普通模式
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -2209,21 +2235,21 @@ namespace SerialDebug
             SetMode(false);
         }
 
-        private string HtEofChars = string.Empty;       // �س�����ʱ������ֹ��
+        string HtEofChars = string.Empty; // 回车发送时跟的终止符
 
         /// <summary>
-        /// ѡ�������
+        /// 选择结束符
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void cbHTEOFChars_SelectedIndexChanged(object sender, EventArgs e)
         {
             //NONE
-            //NULL��\0��
-            //LF��\n��
-            //CR+LF��\r\n��
-            //LF+CR��\n\r��
-            //CR��\r��
+            //NULL（\0）
+            //LF（\n）
+            //CR+LF（\r\n）
+            //LF+CR（\n\r）
+            //CR（\r）
 
             switch (cbHTEOFChars.SelectedIndex)
             {
@@ -2253,10 +2279,10 @@ namespace SerialDebug
             }
         }
 
-        #endregion �����ն�ģʽ
+        #endregion
 
         /// <summary>
-        /// �����¼�
+        /// 接收事件
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -2267,14 +2293,14 @@ namespace SerialDebug
                 string msg = "";
                 StringBuilder sbMsg = new StringBuilder();
 
-                if (chkShowReceive.Checked)  // �Ƿ���ʾ
+                if (chkShowReceive.Checked) // 是否显示
                 {
                     if (chkTimeStamp.Checked)
                     {
                         sbMsg.AppendFormat("{0}[<--]", e.TimeString);
                     }
 
-                    if (chkReceiveHex.Checked) // ʮ��������ʾ
+                    if (chkReceiveHex.Checked) // 十六进制显示
                     {
                         sbMsg.AppendFormat("{0}", e.HexString);
                     }
@@ -2283,20 +2309,23 @@ namespace SerialDebug
                         sbMsg.AppendFormat("{0}", e.ASCIIString);
                     }
 
-                    if (chkWrap.Checked || chkTimeStamp.Checked)                    // �Զ�����
+                    if (chkWrap.Checked || chkTimeStamp.Checked) // 自动换行
                     {
                         sbMsg.Append(Environment.NewLine);
                     }
 
-                    if (sendModeType != SendModeType.File || (sendModeType == SendModeType.File && IsShowDataStreamInFileMode))
+                    if (sendModeType != SendModeType.File ||
+                        (sendModeType == SendModeType.File && IsShowDataStreamInFileMode))
                     {
                         //TextBoxReceiveAppend(ReceiveColor, sbMsg.ToString());
                         msg = sbMsg.ToString();
                     }
                 }
+
                 lock (dataDispQueue)
                 {
-                    dataDispQueue.Enqueue(new SerialStreamContent(SerialStreamType.Receive, sbMsg.ToString(), e.DataLen));
+                    dataDispQueue.Enqueue(
+                        new SerialStreamContent(SerialStreamType.Receive, sbMsg.ToString(), e.DataLen));
                 }
 
                 // RxCounter = RxCounter + (UInt64)e.DataLen;
@@ -2310,7 +2339,7 @@ namespace SerialDebug
         }
 
         /// <summary>
-        /// ������ʾ�¼�
+        /// 发送显示事件
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -2349,7 +2378,8 @@ namespace SerialDebug
                         sendMsg.Append(Environment.NewLine);
                     }
 
-                    if (sendModeType != SendModeType.File || (sendModeType == SendModeType.File && IsShowDataStreamInFileMode))
+                    if (sendModeType != SendModeType.File ||
+                        (sendModeType == SendModeType.File && IsShowDataStreamInFileMode))
                     {
                         //TextBoxReceiveAppend(SendColor, sendMsg.ToString());
                         msg = sendMsg.ToString();
@@ -2358,7 +2388,8 @@ namespace SerialDebug
 
                 lock (dataDispQueue)
                 {
-                    dataDispQueue.Enqueue(new SerialStreamContent(SerialStreamType.Send, sendMsg.ToString(), e.SendParam.DataLen));
+                    dataDispQueue.Enqueue(new SerialStreamContent(SerialStreamType.Send, sendMsg.ToString(),
+                        e.SendParam.DataLen));
                 }
 
                 //TxCounter = TxCounter + (UInt64)(e.SendParam.DataLen);
